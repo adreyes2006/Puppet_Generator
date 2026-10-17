@@ -1,0 +1,11 @@
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Generated Blender output
+build/
+*.blend1
+
+# Windows accidental device-name file
+NUL
