@@ -43,10 +43,10 @@
 
 **Goal**: Previews render with real lighting; saved blend stores EEVEE + resolution
 
-- [ ] T010 [US1] Write Blender test `tests/blender/test_render_engine.py`: engine recorded during render is EEVEE-or-WarnedWorkbench; light rig objects (`preview_sun`, world ambient) exist during render and are removed after; scene render settings fully restored
-- [ ] T011 [US1] Implement `RenderProfile.apply_engine(scene)` in `render.py`: try `BLENDER_EEVEE_NEXT`, except `TypeError` → `BLENDER_WORKBENCH` + return warning string; `setup_light_rig(scene)` creates world ambient + `preview_sun` SUN lamp (energy 2.0, angle 0.5, ~30° tilt); `teardown_light_rig` removes created datablocks
-- [ ] T012 [US1] Update `preview.py` `_render_to`: use `RenderProfile` engine order (EEVEE first), call `setup_light_rig` when engine is EEVEE; extend `_snapshot`/`_restore` to capture world color/strength, lights list, and tear down rig (guarded `hasattr` on `scene.eevee` AO attrs)
-- [ ] T013 [US1] Implement `RenderProfile.apply_to_blend(scene)` in `render.py`: sets engine + `render_resolution` on the styled blend; call from `style_puppet.py` `main()` before `save_as_mainfile`; record result in `StylingState.render` for the manifest
+- [x] T010 [US1] Write Blender test `tests/blender/test_render_engine.py`: engine recorded during render is EEVEE-or-WarnedWorkbench; light rig objects (`preview_sun`, world ambient) exist during render and are removed after; scene render settings fully restored
+- [x] T011 [US1] Implement `RenderProfile.apply_engine(scene)` in `render.py`: try `BLENDER_EEVEE_NEXT`, except `TypeError` → `BLENDER_WORKBENCH` + return warning string; `setup_light_rig(scene)` creates world ambient + `preview_sun` SUN lamp (energy 2.0, angle 0.5, ~30° tilt); `teardown_light_rig` removes created datablocks
+- [x] T012 [US1] Update `preview.py` `_render_to`: use `RenderProfile` engine order (EEVEE first), call `setup_light_rig` when engine is EEVEE; extend `_snapshot`/`_restore` to capture world color/strength, lights list, and tear down rig (guarded `hasattr` on `scene.eevee` AO attrs)
+- [x] T013 [US1] Implement `RenderProfile.apply_to_blend(scene)` in `render.py`: sets engine + `render_resolution` on the styled blend; call from `style_puppet.py` `main()` before `save_as_mainfile`; record result in `StylingState.render` for the manifest
 
 **Checkpoint**: `--preview material=blue` renders via EEVEE on capable hosts; T010 passes; existing preview tests still green
 

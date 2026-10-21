@@ -294,6 +294,11 @@ def main(arguments: Sequence[str] | None = None) -> int:
             ).save(request.save_preset_path)
 
         if not request.previews or _has_apply_operations(request):
+            from puppet_pipeline.styling.render import RenderProfile
+
+            render_record = RenderProfile().apply_to_blend(bpy.context.scene)
+            if render_record["warning"]:
+                print(f"Warning: {render_record['warning']}")
             source_manifest = request.input_path.with_suffix(".manifest.json")
             StylingManifestWriter.write(
                 request.styling_manifest_path,
@@ -302,6 +307,11 @@ def main(arguments: Sequence[str] | None = None) -> int:
                     materials=materials_map,
                     accessories=accessories_state,
                     background=background_state,
+                    render={
+                        "engine": render_record["engine"],
+                        "resolution_x": render_record["resolution_x"],
+                        "resolution_y": render_record["resolution_y"],
+                    },
                     preview_files=preview_files,
                 ),
                 source_manifest=str(source_manifest),
