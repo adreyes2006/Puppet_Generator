@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "styling-preset-v1",
+  "title": "Puppet Styling Preset",
+  "description": "User-authored styling configuration file. Load to apply a complete look; save to capture the current styling state.",
+  "type": "object",
+  "required": ["schema", "fill_mode"],
+  "properties": {
+    "schema": { "const": "styling-preset-v1" },
+    "fill_mode": { "enum": ["solid", "outline"], "default": "solid" },
+    "materials": {
+      "type": "object",
+      "description": "Map of body-part name (without pup. prefix) to material preset name",
+      "propertyNames": {
+        "enum": [
+          "head", "torso",
+          "upper_arm.L", "upper_arm.R",
+          "forearm.L", "forearm.R",
+          "hand.L", "hand.R",
+          "thigh.L", "thigh.R",
+          "shin.L", "shin.R",
+          "foot.L", "foot.R"
+        ]
+      },
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    },
+    "accessories": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["style", "attach_bone"],
+        "properties": {
+          "style": {
+            "type": "string",
+            "description": "Accessory catalog id, e.g. sneakers, boots, cap, beanie"
+          },
+          "attach_bone": {
+            "enum": ["foot.L", "foot.R", "head"],
+            "description": "Bone to parent the accessory to; must be valid for the style"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "background": {
+      "anyOf": [{ "type": "string" }, { "type": "null" }],
+      "description": "Background scenario catalog id or null for none"
+    }
+  },
+  "additionalProperties": false
+}

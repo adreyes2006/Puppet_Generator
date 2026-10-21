@@ -1,0 +1,18 @@
+{
+  "schema": "styling-preset-v1",
+  "fill_mode": "solid",
+  "materials": {
+    "head": "red",
+    "torso": "blue",
+    "upper_arm.L": "grey",
+    "upper_arm.R": "grey",
+    "thigh.L": "grey",
+    "thigh.R": "grey"
+  },
+  "accessories": [
+    {"style": "sneakers", "attach_bone": "foot.L"},
+    {"style": "sneakers", "attach_bone": "foot.R"},
+    {"style": "cap", "attach_bone": "head"}
+  ],
+  "background": "playground"
+}
