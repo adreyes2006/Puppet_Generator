@@ -53,6 +53,24 @@ class EngineSelectionTests(unittest.TestCase):
 
 
 class ResolutionTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.fixture = build_rig_fixture()
+        self.tmp = tempfile.TemporaryDirectory()
+        self.preview_dir = Path(self.tmp.name)
+
+    def tearDown(self) -> None:
+        self.tmp.cleanup()
+
+    def test_custom_preview_resolution_png_size(self) -> None:
+        import struct
+
+        path = PreviewRenderer.render(
+            "material", "blue", self.preview_dir, resolution=(1280, 720)
+        )
+        header = path.read_bytes()[:24]
+        width, height = struct.unpack(">II", header[16:24])
+        self.assertEqual((width, height), (1280, 720))
+
     def test_parse_resolution_valid(self) -> None:
         self.assertEqual(parse_resolution("1280x720"), (1280, 720))
 

@@ -38,6 +38,8 @@ class StylingRequest:
     outline: bool = False
     outline_thickness: float | None = None
     outline_color: str | None = None
+    preview_resolution: tuple[int, int] = (640, 480)
+    render_resolution: tuple[int, int] = (1920, 1080)
 
 
 def blender_arguments(arguments: Sequence[str]) -> list[str]:
@@ -107,6 +109,18 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--outline-color",
         help="outline color: material preset name or #rrggbb hex",
+    )
+    parser.add_argument(
+        "--preview-resolution",
+        default="640x480",
+        metavar="WxH",
+        help="preview PNG resolution (default 640x480)",
+    )
+    parser.add_argument(
+        "--render-resolution",
+        default="1920x1080",
+        metavar="WxH",
+        help="render resolution stored on the saved blend (default 1920x1080)",
     )
     return parser
 
@@ -185,6 +199,14 @@ def parse_request(arguments: Sequence[str]) -> StylingRequest:
         except ValueError as error:
             raise StylingError(str(error)) from error
 
+    from puppet_pipeline.styling.render import parse_resolution
+
+    try:
+        preview_resolution = parse_resolution(parsed.preview_resolution)
+        render_resolution = parse_resolution(parsed.render_resolution)
+    except ValueError as error:
+        raise StylingError(str(error)) from error
+
     return StylingRequest(
         input_path=input_path,
         output_path=output_path,
@@ -202,6 +224,8 @@ def parse_request(arguments: Sequence[str]) -> StylingRequest:
         outline=parsed.outline,
         outline_thickness=parsed.outline_thickness,
         outline_color=outline_color,
+        preview_resolution=preview_resolution,
+        render_resolution=render_resolution,
     )
 
 
@@ -337,7 +361,11 @@ def main(arguments: Sequence[str] | None = None) -> int:
                 preview_files.append(
                     str(
                         PreviewRenderer.render(
-                            kind, name, request.preview_dir, limb_thickness
+                            kind,
+                            name,
+                            request.preview_dir,
+                            limb_thickness,
+                            resolution=request.preview_resolution,
                         )
                     )
                 )
@@ -357,7 +385,9 @@ def main(arguments: Sequence[str] | None = None) -> int:
         if not request.previews or _has_apply_operations(request):
             from puppet_pipeline.styling.render import RenderProfile
 
-            render_record = RenderProfile().apply_to_blend(bpy.context.scene)
+            render_record = RenderProfile(
+                render_resolution=request.render_resolution
+            ).apply_to_blend(bpy.context.scene)
             if render_record["warning"]:
                 print(f"Warning: {render_record['warning']}")
             source_manifest = request.input_path.with_suffix(".manifest.json")

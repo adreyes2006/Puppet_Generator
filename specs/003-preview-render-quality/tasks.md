@@ -82,8 +82,8 @@
 
 **Goal**: `--preview-resolution` and `--render-resolution` wired through
 
-- [ ] T022 [US4] Add `--preview-resolution` (default `640x480`) + `--render-resolution` (default `1920x1080`) to `style_puppet.py` parser; validate via `parse_resolution`; `StylingError` (exit 2) on bad input
-- [ ] T023 [US4] Thread `preview_resolution` into `PreviewRenderer.render()` → `_render_to` instead of hardcoded 640/480; Blender test asserts PNG dimensions match requested size
+- [x] T022 [US4] Add `--preview-resolution` (default `640x480`) + `--render-resolution` (default `1920x1080`) to `style_puppet.py` parser; validate via `parse_resolution`; `StylingError` (exit 2) on bad input
+- [x] T023 [US4] Thread `preview_resolution` into `PreviewRenderer.render()` → `_render_to` instead of hardcoded 640/480; Blender test asserts PNG dimensions match requested size
 
 **Checkpoint**: `--preview-resolution 1280x720` yields a 1280×720 PNG; defaults unchanged; `--render-resolution` lands in saved blend + manifest `render` block (from T013)
 
