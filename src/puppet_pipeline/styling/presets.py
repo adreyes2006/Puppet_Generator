@@ -208,11 +208,24 @@ class StylingPreset:
             if self.background
             else None
         )
+        outline_state = None
+        if self.outline is not None and self.outline.enabled:
+            if self.fill_mode == "outline":
+                print(
+                    "Warning: fill-mode outline overrides toon outline; "
+                    "skipping outline"
+                )
+            else:
+                from puppet_pipeline.styling.outline import OutlineApplier
+
+                OutlineApplier.apply_all(self.outline, limb_thickness)
+                outline_state = self.outline.resolve(limb_thickness)
         return StylingState(
             fill_mode=self.fill_mode,
             materials=dict(self.materials),
             accessories=accessories_state,
             background=background_state,
+            outline=outline_state,
         )
 
 
@@ -222,6 +235,9 @@ def reset_styling() -> None:
 
     from puppet_pipeline.common import naming
     from puppet_pipeline.styling import naming as styling_naming
+    from puppet_pipeline.styling.outline import OutlineApplier
+
+    OutlineApplier.remove_all()
 
     for name in naming.GEOMETRY_BINDINGS:
         obj = bpy.data.objects.get(name)

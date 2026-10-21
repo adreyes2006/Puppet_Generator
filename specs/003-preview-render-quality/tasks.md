@@ -56,11 +56,11 @@
 
 **Goal**: Persistent configurable inverted-hull outlines on `pup.*` + `acc.*`
 
-- [ ] T014 [US2] Write Blender test `tests/blender/test_outline_apply.py`: `outline_toon` SOLIDIFY modifier on each `pup.*`/`acc.*` with `use_flip_normals`, negative offset, `use_even_offset`, `material_offset` → appended `mat.outline` slot; idempotent re-apply; `reset_styling()` removes modifiers + slots + `mat.outline` datablock; `--fill-mode outline` + outline → warning, no modifiers
-- [ ] T015 [US2] Implement `OutlineApplier` in `outline.py`: `apply(obj, spec)` creates `outline_toon` SOLIDIFY modifier (skip if present); `apply_all(spec, limb_thickness)` iterates `pup.*` via `GEOMETRY_BINDINGS` + `acc.*` objects; `remove_all()` for reset; `_outline_material()` creates/reuses `mat.outline` with emission
-- [ ] T016 [US2] Update `reset_styling()` in `presets.py`: remove `outline_toon` modifiers from `pup.*`/`acc.*`, pop trailing `mat.outline` slots, purge `mat.outline` datablocks
-- [ ] T017 [US2] Update `StylingPreset.apply()` in `presets.py`: honor `outline` field only when `fill_mode == "solid"`; resolved spec passed to `OutlineApplier.apply_all`
-- [ ] T018 [US2] Add CLI flags to `style_puppet.py`: `--outline`, `--outline-thickness`, `--outline-color`; merge preset outline with flag precedence (flags override preset fields); emit warning + skip when `fill_mode == "outline"`; include resolved `outline` in `StylingState` + `save_preset`
+- [x] T014 [US2] Write Blender test `tests/blender/test_outline_apply.py`: `outline_toon` SOLIDIFY modifier on each `pup.*`/`acc.*` with `use_flip_normals`, negative offset, `use_even_offset`, `material_offset` → appended `mat.outline` slot; idempotent re-apply; `reset_styling()` removes modifiers + slots + `mat.outline` datablock; `--fill-mode outline` + outline → warning, no modifiers
+- [x] T015 [US2] Implement `OutlineApplier` in `outline.py`: `apply(obj, spec)` creates `outline_toon` SOLIDIFY modifier (skip if present); `apply_all(spec, limb_thickness)` iterates `pup.*` via `GEOMETRY_BINDINGS` + `acc.*` objects; `remove_all()` for reset; `_outline_material()` creates/reuses `mat.outline` with emission
+- [x] T016 [US2] Update `reset_styling()` in `presets.py`: remove `outline_toon` modifiers from `pup.*`/`acc.*`, pop trailing `mat.outline` slots, purge `mat.outline` datablocks
+- [x] T017 [US2] Update `StylingPreset.apply()` in `presets.py`: honor `outline` field only when `fill_mode == "solid"`; resolved spec passed to `OutlineApplier.apply_all`
+- [x] T018 [US2] Add CLI flags to `style_puppet.py`: `--outline`, `--outline-thickness`, `--outline-color`; merge preset outline with flag precedence (flags override preset fields); emit warning + skip when `fill_mode == "outline"`; include resolved `outline` in `StylingState` + `save_preset`
 
 **Checkpoint**: quickstart scenario 2 + 5 pass; T014 green; `--fill-mode outline` + `--outline` warns and skips
 
