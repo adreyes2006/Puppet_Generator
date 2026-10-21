@@ -208,7 +208,8 @@ class ArmatureBuilder:
         active_object = bpy.context.view_layer.objects.active
         if active_object is not None and active_object.mode != "OBJECT":
             bpy.ops.object.mode_set(mode="OBJECT")
-        for obj in bpy.context.selected_objects:
+        view_layer = bpy.context.view_layer
+        for obj in getattr(view_layer.objects, "selected", []):
             obj.select_set(False)
 
         existing = bpy.data.objects.get(naming.ARMATURE_OBJECT_NAME)
@@ -235,7 +236,14 @@ class ArmatureBuilder:
         armature_object.select_set(True)
         bpy.context.view_layer.objects.active = armature_object
 
-        bpy.ops.object.mode_set(mode="EDIT")
+        mode_override = dict(
+            object=armature_object,
+            active_object=armature_object,
+            selected_objects=[armature_object],
+            selected_editable_objects=[armature_object],
+        )
+        with bpy.context.temp_override(**mode_override):
+            bpy.ops.object.mode_set(mode="EDIT")
         try:
             for spec in specs:
                 edit_bone = armature_data.edit_bones.new(spec.name)
@@ -251,6 +259,7 @@ class ArmatureBuilder:
                     edit_bone.use_connect = spec.use_connect
                 edit_bone.align_roll(Vector((0.0, 1.0, 0.0)))
         finally:
-            bpy.ops.object.mode_set(mode="OBJECT")
+            with bpy.context.temp_override(**mode_override):
+                bpy.ops.object.mode_set(mode="OBJECT")
 
         return armature_object
