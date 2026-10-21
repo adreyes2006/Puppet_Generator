@@ -70,9 +70,9 @@
 
 **Goal**: Multi-tone multi-primitive props, still single `bg.prop.<name>` meshes
 
-- [ ] T019 [US3] Extend `test_backgrounds.py`: assert each catalog prop has ≥2 primitives or ≥2 tones after enrichment; assert all vertices share the prop's `prop_y`; assert sub-props add material slots to the same mesh
-- [ ] T020 [US3] Add `SubPropSpec` + `PropSpec.sub_props` in `backgrounds.py`; implement `_composite_prop_mesh(prop, prop_y)` merging rect/circle primitives via `from_pydata` with index offsets and per-face `material_index`; update `BackgroundBuilder.build` to append all sub-prop materials to one object
-- [ ] T021 [US3] Enrich `BACKGROUND_CATALOG`: ≥2 primitives/tones per prop in all 5 scenarios (e.g., slide = ladder + ramp + legs; swing = frame + chains + seat; fridge = body + door + handle)
+- [x] T019 [US3] Extend `test_backgrounds.py`: assert each catalog prop has ≥2 primitives or ≥2 tones after enrichment; assert all vertices share the prop's `prop_y`; assert sub-props add material slots to the same mesh
+- [x] T020 [US3] Add `SubPropSpec` + `PropSpec.sub_props` in `backgrounds.py`; implement `_composite_prop_mesh(prop, prop_y)` merging rect/circle primitives via `from_pydata` with index offsets and per-face `material_index`; update `BackgroundBuilder.build` to append all sub-prop materials to one object
+- [x] T021 [US3] Enrich `BACKGROUND_CATALOG`: ≥2 primitives/tones per prop in all 5 scenarios (e.g., slide = ladder + ramp + legs; swing = frame + chains + seat; fridge = body + door + handle)
 
 **Checkpoint**: `pytest tests/unit` + `tests/blender/test_backgrounds.py` green; `bg.prop.*` count and names unchanged
 

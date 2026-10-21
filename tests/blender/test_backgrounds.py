@@ -76,8 +76,28 @@ class BackgroundBuildTests(unittest.TestCase):
         BackgroundBuilder.build("room")
         for obj in _bg_objects():
             with self.subTest(obj=obj.name):
-                self.assertEqual(len(obj.data.materials), 1)
-                self.assertTrue(obj.data.materials[0].name.startswith("mat."))
+                self.assertGreaterEqual(len(obj.data.materials), 1)
+                for material in obj.data.materials:
+                    self.assertTrue(material.name.startswith("mat."))
+
+    def test_props_have_multiple_tones(self) -> None:
+        BackgroundBuilder.build("playground")
+        for obj in _bg_objects():
+            if not obj.name.startswith("bg.prop."):
+                continue
+            with self.subTest(obj=obj.name):
+                self.assertGreaterEqual(len(obj.data.materials), 2)
+                self.assertGreaterEqual(len(obj.data.polygons), 2)
+
+    def test_every_catalog_prop_enriched(self) -> None:
+        for scenario_name, spec in BACKGROUND_CATALOG.items():
+            for prop in spec.props:
+                with self.subTest(scenario=scenario_name, prop=prop.name):
+                    self.assertGreaterEqual(
+                        len(prop.sub_props) + 1,
+                        2,
+                        "prop must compose at least 2 primitives",
+                    )
 
     def test_clear_removes_all_bg_objects(self) -> None:
         BackgroundBuilder.build("playground")
