@@ -9,7 +9,8 @@ from typing import Any
 
 from puppet_pipeline.styling.presets import PART_NAMES
 
-STYLING_SCHEMA = "styling-v1"
+STYLING_SCHEMA_V1 = "styling-v1"
+STYLING_SCHEMA = "styling-v2"
 
 
 class StylingManifestError(ValueError):
@@ -22,6 +23,8 @@ class StylingState:
     materials: dict[str, str] = field(default_factory=dict)
     accessories: list[dict[str, str]] = field(default_factory=list)
     background: str | None = None
+    outline: dict[str, Any] | None = None
+    render: dict[str, Any] | None = None
     preview_files: list[str] = field(default_factory=list)
 
 
@@ -65,8 +68,30 @@ class StylingManifestWriter:
             "materials": materials,
             "accessories": accessories,
             "background": state.background,
+            "outline": state.outline,
+            "render": {
+                "engine": state.render["engine"],
+                "resolution_x": state.render["resolution_x"],
+                "resolution_y": state.render["resolution_y"],
+            }
+            if state.render
+            else None,
             "preview_files": list(state.preview_files),
         }
+
+    @staticmethod
+    def read(payload: Any) -> dict[str, Any]:
+        """Accept a styling-v1 or styling-v2 manifest dict; v1 gains null fields."""
+        if not isinstance(payload, dict):
+            raise StylingManifestError("manifest must be a JSON object")
+        schema = payload.get("schema")
+        if schema == STYLING_SCHEMA_V1:
+            return {**payload, "outline": None, "render": None}
+        if schema == STYLING_SCHEMA:
+            return payload
+        raise StylingManifestError(
+            f"unsupported styling schema: {schema!r}"
+        )
 
     @staticmethod
     def serialize(manifest: dict[str, Any]) -> bytes:

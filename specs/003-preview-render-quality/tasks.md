@@ -29,11 +29,11 @@
 
 **Purpose**: Shared types/parsers all stories depend on — MUST complete first
 
-- [ ] T005 Implement `OutlineSpec` in `outline.py`: frozen dataclass `{enabled, thickness, color}`; `DEFAULT_OUTLINE_COLOR = "#0d0d0d"`; `THICKNESS_FACTOR = 0.15`; `resolve(limb_thickness)` → concrete `{thickness, color}`
-- [ ] T006 Implement `parse_outline_color(value)` in `outline.py`: `#rrggbb` passthrough (validated), catalog name → hex via `MATERIAL_CATALOG`, else `ValueError`
-- [ ] T007 Implement `parse_resolution(value)` in `render.py`: `r"^(\d+)x(\d+)$"`, bounds 16–16384, `ValueError` on bad input; `RenderProfile` dataclass with defaults (EEVEE, 640×480, 1920×1080)
-- [ ] T008 Extend `StylingState` in `manifest.py` with `outline: dict | None` + `render: dict | None`; emit `schema: styling-v2` with both fields in `build()`; add `STYLING_SCHEMA_V1` constant + v1-accepting `read()` helper
-- [ ] T009 Extend `StylingPreset` in `presets.py`: `PRESET_SCHEMA_V1/V2` constants, `outline: OutlineSpec | None` field, `from_dict` accepts both schemas (v1 → `outline=None`), `to_dict`/`serialize` emit v2 with `outline` object; update `_TOP_LEVEL_KEYS`
+- [x] T005 Implement `OutlineSpec` in `outline.py`: frozen dataclass `{enabled, thickness, color}`; `DEFAULT_OUTLINE_COLOR = "#0d0d0d"`; `THICKNESS_FACTOR = 0.15`; `resolve(limb_thickness)` → concrete `{thickness, color}`
+- [x] T006 Implement `parse_outline_color(value)` in `outline.py`: `#rrggbb` passthrough (validated), catalog name → hex via `MATERIAL_CATALOG`, else `ValueError`
+- [x] T007 Implement `parse_resolution(value)` in `render.py`: `r"^(\d+)x(\d+)$"`, bounds 16–16384, `ValueError` on bad input; `RenderProfile` dataclass with defaults (EEVEE, 640×480, 1920×1080)
+- [x] T008 Extend `StylingState` in `manifest.py` with `outline: dict | None` + `render: dict | None`; emit `schema: styling-v2` with both fields in `build()`; add `STYLING_SCHEMA_V1` constant + v1-accepting `read()` helper
+- [x] T009 Extend `StylingPreset` in `presets.py`: `PRESET_SCHEMA_V1/V2` constants, `outline: OutlineSpec | None` field, `from_dict` accepts both schemas (v1 → `outline=None`), `to_dict`/`serialize` emit v2 with `outline` object; update `_TOP_LEVEL_KEYS`
 
 **Checkpoint**: `pytest tests/unit` all green; T003/T004 now pass
 
