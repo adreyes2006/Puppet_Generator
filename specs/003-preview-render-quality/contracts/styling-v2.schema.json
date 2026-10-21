@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "styling-v2",
+  "title": "Puppet Styling Manifest (v2)",
+  "description": "Emitted by the styling stage; records the active visual state applied to a generated puppet. v2 adds resolved outline state and stored render settings. Does not modify the schema-v1 generation manifest.",
+  "type": "object",
+  "required": [
+    "schema",
+    "source_manifest",
+    "blender_version",
+    "fill_mode",
+    "materials",
+    "accessories",
+    "background",
+    "outline",
+    "render",
+    "preview_files"
+  ],
+  "properties": {
+    "schema": { "const": "styling-v2" },
+    "source_manifest": {
+      "type": "string",
+      "description": "Path to the generation manifest (.manifest.json) of the styled puppet"
+    },
+    "blender_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "fill_mode": { "enum": ["solid", "outline"] },
+    "materials": {
+      "type": "object",
+      "description": "Map of body-part object name to applied material preset name. Only non-default assignments are recorded.",
+      "propertyNames": {
+        "enum": [
+          "pup.head", "pup.torso",
+          "pup.upper_arm.L", "pup.upper_arm.R",
+          "pup.forearm.L", "pup.forearm.R",
+          "pup.hand.L", "pup.hand.R",
+          "pup.thigh.L", "pup.thigh.R",
+          "pup.shin.L", "pup.shin.R",
+          "pup.foot.L", "pup.foot.R"
+        ]
+      },
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    },
+    "accessories": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "style", "attach_bone"],
+        "properties": {
+          "name": { "type": "string", "pattern": "^acc\\." },
+          "style": { "type": "string" },
+          "attach_bone": { "enum": ["foot.L", "foot.R", "head"] }
+        },
+        "additionalProperties": false
+      }
+    },
+    "background": {
+      "anyOf": [{ "type": "string" }, { "type": "null" }],
+      "description": "Active background scenario name or null"
+    },
+    "outline": {
+      "anyOf": [
+        {
+          "type": "object",
+          "required": ["enabled", "thickness", "color"],
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "thickness": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "Resolved thickness in absolute Blender units"
+            },
+            "color": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$",
+              "description": "Resolved outline color serialized as hex"
+            }
+          },
+          "additionalProperties": false
+        },
+        { "type": "null" }
+      ],
+      "description": "Resolved toon outline state or null when outlines were never applied"
+    },
+    "render": {
+      "type": "object",
+      "required": ["engine", "resolution_x", "resolution_y"],
+      "properties": {
+        "engine": {
+          "type": "string",
+          "description": "Engine stored on the saved blend, e.g. BLENDER_EEVEE_NEXT"
+        },
+        "resolution_x": { "type": "integer", "minimum": 16 },
+        "resolution_y": { "type": "integer", "minimum": 16 }
+      },
+      "additionalProperties": false,
+      "description": "Render settings persisted into the saved .blend (--render-resolution)"
+    },
+    "preview_files": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "\\.png$" }
+    }
+  },
+  "additionalProperties": false
+}

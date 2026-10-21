@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "styling-preset-v2",
+  "title": "Puppet Styling Preset (v2)",
+  "description": "User-authored styling configuration file. v2 adds the optional 'outline' object for persistent toon-outline state. v1 presets remain loadable.",
+  "type": "object",
+  "required": ["schema", "fill_mode"],
+  "properties": {
+    "schema": { "const": "styling-preset-v2" },
+    "fill_mode": { "enum": ["solid", "outline"], "default": "solid" },
+    "materials": {
+      "type": "object",
+      "description": "Map of body-part name (without pup. prefix) to material preset name",
+      "propertyNames": {
+        "enum": [
+          "head", "torso",
+          "upper_arm.L", "upper_arm.R",
+          "forearm.L", "forearm.R",
+          "hand.L", "hand.R",
+          "thigh.L", "thigh.R",
+          "shin.L", "shin.R",
+          "foot.L", "foot.R"
+        ]
+      },
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    },
+    "accessories": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["style", "attach_bone"],
+        "properties": {
+          "style": {
+            "type": "string",
+            "description": "Accessory catalog id, e.g. sneakers, boots, cap, beanie"
+          },
+          "attach_bone": {
+            "enum": ["foot.L", "foot.R", "head"],
+            "description": "Bone to parent the accessory to; must be valid for the style"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "background": {
+      "anyOf": [{ "type": "string" }, { "type": "null" }],
+      "description": "Background scenario catalog id or null for none"
+    },
+    "outline": {
+      "anyOf": [
+        {
+          "type": "object",
+          "required": ["enabled"],
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Apply inverted-hull toon outlines to pup.* and acc.* objects"
+            },
+            "thickness": {
+              "anyOf": [{ "type": "number", "exclusiveMinimum": 0 }, { "type": "null" }],
+              "description": "Outline thickness in absolute Blender units; null derives limb_thickness × 0.15"
+            },
+            "color": {
+              "anyOf": [
+                { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+                { "type": "string", "minLength": 1 },
+                { "type": "null" }
+              ],
+              "description": "#rrggbb hex or material catalog name; null uses near-black default"
+            }
+          },
+          "additionalProperties": false
+        },
+        { "type": "null" }
+      ],
+      "description": "Toon outline state; ignored when fill_mode is 'outline' (wireframe wins)"
+    }
+  },
+  "additionalProperties": false
+}
