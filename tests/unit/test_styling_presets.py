@@ -97,7 +97,8 @@ class StylingPresetRoundTripTests(unittest.TestCase):
     def test_dict_round_trip(self) -> None:
         payload = _valid_preset_payload()
         preset = StylingPreset.from_dict(payload)
-        self.assertEqual(preset.to_dict(), payload)
+        expected = {**payload, "schema": "styling-preset-v2", "outline": None}
+        self.assertEqual(preset.to_dict(), expected)
 
     def test_file_round_trip(self) -> None:
         preset = StylingPreset.from_dict(_valid_preset_payload())

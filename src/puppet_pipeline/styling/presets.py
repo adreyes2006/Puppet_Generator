@@ -8,7 +8,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-PRESET_SCHEMA = "styling-preset-v1"
+PRESET_SCHEMA_V1 = "styling-preset-v1"
+PRESET_SCHEMA = "styling-preset-v2"
 
 FILL_MODES = ("solid", "outline")
 
@@ -31,7 +32,14 @@ PART_NAMES = (
 
 ATTACH_BONES = ("foot.L", "foot.R", "head")
 
-_TOP_LEVEL_KEYS = {"schema", "fill_mode", "materials", "accessories", "background"}
+_TOP_LEVEL_KEYS = {
+    "schema",
+    "fill_mode",
+    "materials",
+    "accessories",
+    "background",
+    "outline",
+}
 _FILENAME = re.compile(r"^[A-Za-z0-9._-]+$")
 
 
@@ -67,6 +75,7 @@ class StylingPreset:
     materials: dict[str, str] = field(default_factory=dict)
     accessories: list[dict[str, str]] = field(default_factory=list)
     background: str | None = None
+    outline: Any = None
 
     @classmethod
     def from_dict(cls, payload: Any) -> StylingPreset:
@@ -75,9 +84,10 @@ class StylingPreset:
         unknown = set(payload) - _TOP_LEVEL_KEYS
         if unknown:
             raise PresetError(f"unknown preset keys: {sorted(unknown)}")
-        if payload.get("schema") != PRESET_SCHEMA:
+        if payload.get("schema") not in (PRESET_SCHEMA_V1, PRESET_SCHEMA):
             raise PresetError(
-                f"schema must be {PRESET_SCHEMA!r}: {payload.get('schema')!r}"
+                f"schema must be {PRESET_SCHEMA_V1!r} or {PRESET_SCHEMA!r}: "
+                f"{payload.get('schema')!r}"
             )
         fill_mode = payload.get("fill_mode", "solid")
         if fill_mode not in FILL_MODES:
@@ -103,11 +113,22 @@ class StylingPreset:
         if background is not None and not isinstance(background, str):
             raise PresetError(f"background must be a string or null: {background!r}")
 
+        raw_outline = payload.get("outline")
+        outline = None
+        if raw_outline is not None:
+            from puppet_pipeline.styling.outline import OutlineSpec
+
+            try:
+                outline = OutlineSpec.from_dict(raw_outline)
+            except ValueError as error:
+                raise PresetError(str(error)) from error
+
         return cls(
             fill_mode=fill_mode,
             materials=materials,
             accessories=accessories,
             background=background,
+            outline=outline,
         )
 
     @classmethod
@@ -126,6 +147,7 @@ class StylingPreset:
             "materials": dict(self.materials),
             "accessories": [dict(entry) for entry in self.accessories],
             "background": self.background,
+            "outline": self.outline.to_dict() if self.outline else None,
         }
 
     def serialize(self) -> bytes:
@@ -186,11 +208,24 @@ class StylingPreset:
             if self.background
             else None
         )
+        outline_state = None
+        if self.outline is not None and self.outline.enabled:
+            if self.fill_mode == "outline":
+                print(
+                    "Warning: fill-mode outline overrides toon outline; "
+                    "skipping outline"
+                )
+            else:
+                from puppet_pipeline.styling.outline import OutlineApplier
+
+                OutlineApplier.apply_all(self.outline, limb_thickness)
+                outline_state = self.outline.resolve(limb_thickness)
         return StylingState(
             fill_mode=self.fill_mode,
             materials=dict(self.materials),
             accessories=accessories_state,
             background=background_state,
+            outline=outline_state,
         )
 
 
@@ -200,6 +235,9 @@ def reset_styling() -> None:
 
     from puppet_pipeline.common import naming
     from puppet_pipeline.styling import naming as styling_naming
+    from puppet_pipeline.styling.outline import OutlineApplier
+
+    OutlineApplier.remove_all()
 
     for name in naming.GEOMETRY_BINDINGS:
         obj = bpy.data.objects.get(name)

@@ -11,7 +11,9 @@ _HIDDEN_PREFIX = "preview_hidden."
 
 
 class PreviewRenderer:
-    """Renders non-destructive PNG previews of styling choices via Workbench."""
+    """Renders non-destructive PNG previews of styling choices via EEVEE."""
+
+    last_engine: str | None = None
 
     @staticmethod
     def render(
@@ -19,6 +21,7 @@ class PreviewRenderer:
         name: str,
         preview_dir: Path | str,
         limb_thickness: float = DEFAULT_LIMB_THICKNESS,
+        resolution: tuple[int, int] | None = None,
     ) -> Path:
         """Render `<kind>-<name>.png` into `preview_dir`, restoring the scene after."""
         import bpy
@@ -35,7 +38,7 @@ class PreviewRenderer:
         snapshot = PreviewRenderer._snapshot()
         try:
             PreviewRenderer._apply_preview(kind, name, limb_thickness)
-            PreviewRenderer._render_to(target)
+            PreviewRenderer._render_to(target, resolution)
         finally:
             PreviewRenderer._restore(snapshot)
         return target
@@ -47,10 +50,14 @@ class PreviewRenderer:
         from puppet_pipeline.common import naming
 
         material_slots = {}
+        object_modifiers = {}
         for object_name in naming.GEOMETRY_BINDINGS:
             obj = bpy.data.objects.get(object_name)
             if obj is not None:
                 material_slots[object_name] = list(obj.data.materials)
+                object_modifiers[object_name] = {
+                    m.name for m in obj.modifiers
+                }
 
         hidden = {}
         for obj in list(bpy.data.objects):
@@ -61,8 +68,10 @@ class PreviewRenderer:
                 obj.hide_viewport = True
 
         scene = bpy.context.scene
+        world = scene.world
         return {
             "material_slots": material_slots,
+            "object_modifiers": object_modifiers,
             "render": {
                 "engine": scene.render.engine,
                 "resolution_x": scene.render.resolution_x,
@@ -70,6 +79,31 @@ class PreviewRenderer:
                 "filepath": scene.render.filepath,
                 "file_format": scene.render.image_settings.file_format,
                 "camera": scene.camera,
+            },
+            "world": {
+                "world": world,
+                "color": tuple(world.color) if world is not None else None,
+                "use_nodes": world.use_nodes if world is not None else None,
+                "bg_color": (
+                    tuple(
+                        next(
+                            n
+                            for n in world.node_tree.nodes
+                            if n.type == "BACKGROUND"
+                        ).inputs["Color"].default_value
+                    )
+                    if world is not None and world.use_nodes
+                    else None
+                ),
+                "bg_strength": (
+                    next(
+                        n
+                        for n in world.node_tree.nodes
+                        if n.type == "BACKGROUND"
+                    ).inputs["Strength"].default_value
+                    if world is not None and world.use_nodes
+                    else None
+                ),
             },
             "hidden": hidden,
             "objects": {o.name for o in bpy.data.objects},
@@ -97,7 +131,10 @@ class PreviewRenderer:
             obj = bpy.data.objects.get(object_name)
             if obj is None:
                 continue
-            for modifier in [m for m in obj.modifiers if m.type == "WIREFRAME"]:
+            kept = snapshot["object_modifiers"].get(object_name, set())
+            for modifier in [
+                m for m in obj.modifiers if m.name not in kept
+            ]:
                 obj.modifiers.remove(modifier)
             obj.data.materials.clear()
             for material in slots:
@@ -134,6 +171,21 @@ class PreviewRenderer:
         scene.render.image_settings.file_format = render["file_format"]
         scene.camera = render["camera"]
 
+        world_state = snapshot["world"]
+        scene.world = world_state["world"]
+        world = scene.world
+        if world is not None:
+            world.color = world_state["color"]
+            world.use_nodes = world_state["use_nodes"]
+            if world.use_nodes and world_state["bg_color"] is not None:
+                background = next(
+                    n for n in world.node_tree.nodes if n.type == "BACKGROUND"
+                )
+                background.inputs["Color"].default_value = world_state["bg_color"]
+                background.inputs["Strength"].default_value = world_state[
+                    "bg_strength"
+                ]
+
     @staticmethod
     def _apply_preview(kind: str, name: str, limb_thickness: float) -> None:
         import bpy
@@ -154,23 +206,35 @@ class PreviewRenderer:
             BackgroundBuilder.build(name)
 
     @staticmethod
-    def _render_to(target: Path) -> None:
+    def _render_to(target: Path, resolution: tuple[int, int] | None = None) -> None:
         import bpy
 
-        scene = bpy.context.scene
-        try:
-            scene.render.engine = "BLENDER_WORKBENCH"
-        except TypeError:
-            scene.render.engine = "BLENDER_EEVEE_NEXT"
+        from puppet_pipeline.styling.render import FALLBACK_ENGINE, RenderProfile
 
+        scene = bpy.context.scene
+        warning = RenderProfile.apply_engine(scene)
+        if warning:
+            print(f"Warning: {warning}")
+        PreviewRenderer.last_engine = scene.render.engine
+
+        rig = (
+            RenderProfile.setup_light_rig(scene)
+            if scene.render.engine != FALLBACK_ENGINE
+            else None
+        )
         camera = PreviewRenderer._frame_camera()
         scene.camera = camera
-        scene.render.resolution_x = 640
-        scene.render.resolution_y = 480
+        width, height = resolution or RenderProfile().preview_resolution
+        scene.render.resolution_x = width
+        scene.render.resolution_y = height
         scene.render.filepath = str(target)
         scene.render.image_settings.file_format = "PNG"
-        bpy.ops.render.render(write_still=True)
-        bpy.data.objects.remove(camera, do_unlink=True)
+        try:
+            bpy.ops.render.render(write_still=True)
+        finally:
+            bpy.data.objects.remove(camera, do_unlink=True)
+            if rig is not None:
+                RenderProfile.teardown_light_rig(scene, rig)
 
     @staticmethod
     def _frame_camera():

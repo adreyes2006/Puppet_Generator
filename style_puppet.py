@@ -35,6 +35,11 @@ class StylingRequest:
     reset: bool = False
     previews: tuple[tuple[str, str], ...] = ()
     preview_dir: Path = field(default_factory=lambda: Path("build/previews"))
+    outline: bool = False
+    outline_thickness: float | None = None
+    outline_color: str | None = None
+    preview_resolution: tuple[int, int] = (640, 480)
+    render_resolution: tuple[int, int] = (1920, 1080)
 
 
 def blender_arguments(arguments: Sequence[str]) -> list[str]:
@@ -90,6 +95,32 @@ def create_parser() -> argparse.ArgumentParser:
         type=Path,
         default=Path("build/previews"),
         help="directory for preview PNG output",
+    )
+    parser.add_argument(
+        "--outline",
+        action="store_true",
+        help="apply a toon outline (inverted hull) to puppet parts and accessories",
+    )
+    parser.add_argument(
+        "--outline-thickness",
+        type=float,
+        help="outline thickness in Blender units; defaults to limb_thickness x 0.15",
+    )
+    parser.add_argument(
+        "--outline-color",
+        help="outline color: material preset name or #rrggbb hex",
+    )
+    parser.add_argument(
+        "--preview-resolution",
+        default="640x480",
+        metavar="WxH",
+        help="preview PNG resolution (default 640x480)",
+    )
+    parser.add_argument(
+        "--render-resolution",
+        default="1920x1080",
+        metavar="WxH",
+        help="render resolution stored on the saved blend (default 1920x1080)",
     )
     return parser
 
@@ -159,6 +190,23 @@ def parse_request(arguments: Sequence[str]) -> StylingRequest:
         (kind, name) for kind, name in (_parse_key_value(p, "preview") for p in parsed.preview)
     )
 
+    outline_color = parsed.outline_color
+    if outline_color is not None:
+        from puppet_pipeline.styling.outline import parse_outline_color
+
+        try:
+            outline_color = parse_outline_color(outline_color)
+        except ValueError as error:
+            raise StylingError(str(error)) from error
+
+    from puppet_pipeline.styling.render import parse_resolution
+
+    try:
+        preview_resolution = parse_resolution(parsed.preview_resolution)
+        render_resolution = parse_resolution(parsed.render_resolution)
+    except ValueError as error:
+        raise StylingError(str(error)) from error
+
     return StylingRequest(
         input_path=input_path,
         output_path=output_path,
@@ -173,6 +221,11 @@ def parse_request(arguments: Sequence[str]) -> StylingRequest:
         reset=parsed.reset,
         previews=previews,
         preview_dir=preview_dir,
+        outline=parsed.outline,
+        outline_thickness=parsed.outline_thickness,
+        outline_color=outline_color,
+        preview_resolution=preview_resolution,
+        render_resolution=render_resolution,
     )
 
 
@@ -269,6 +322,37 @@ def main(arguments: Sequence[str] | None = None) -> int:
 
             background_state = BackgroundBuilder.build(requested_background)
 
+        outline_state: dict | None = None
+        outline_spec = preset.outline if preset and preset.outline else None
+        if request.outline:
+            from puppet_pipeline.styling.outline import OutlineSpec
+
+            base = outline_spec or OutlineSpec()
+            outline_spec = OutlineSpec(
+                enabled=True,
+                thickness=(
+                    request.outline_thickness
+                    if request.outline_thickness is not None
+                    else base.thickness
+                ),
+                color=(
+                    request.outline_color
+                    if request.outline_color is not None
+                    else base.color
+                ),
+            )
+        if outline_spec is not None and outline_spec.enabled:
+            if fill_mode == "outline":
+                print(
+                    "Warning: fill-mode outline overrides toon outline; "
+                    "skipping outline"
+                )
+            else:
+                from puppet_pipeline.styling.outline import OutlineApplier
+
+                OutlineApplier.apply_all(outline_spec, limb_thickness)
+                outline_state = outline_spec.resolve(limb_thickness)
+
         preview_files: list[str] = []
         if request.previews:
             from puppet_pipeline.styling.preview import PreviewRenderer
@@ -277,7 +361,11 @@ def main(arguments: Sequence[str] | None = None) -> int:
                 preview_files.append(
                     str(
                         PreviewRenderer.render(
-                            kind, name, request.preview_dir, limb_thickness
+                            kind,
+                            name,
+                            request.preview_dir,
+                            limb_thickness,
+                            resolution=request.preview_resolution,
                         )
                     )
                 )
@@ -291,9 +379,17 @@ def main(arguments: Sequence[str] | None = None) -> int:
                 },
                 accessories=accessories_state,
                 background=background_state,
+                outline=outline_spec if outline_state else None,
             ).save(request.save_preset_path)
 
         if not request.previews or _has_apply_operations(request):
+            from puppet_pipeline.styling.render import RenderProfile
+
+            render_record = RenderProfile(
+                render_resolution=request.render_resolution
+            ).apply_to_blend(bpy.context.scene)
+            if render_record["warning"]:
+                print(f"Warning: {render_record['warning']}")
             source_manifest = request.input_path.with_suffix(".manifest.json")
             StylingManifestWriter.write(
                 request.styling_manifest_path,
@@ -302,6 +398,12 @@ def main(arguments: Sequence[str] | None = None) -> int:
                     materials=materials_map,
                     accessories=accessories_state,
                     background=background_state,
+                    outline=outline_state,
+                    render={
+                        "engine": render_record["engine"],
+                        "resolution_x": render_record["resolution_x"],
+                        "resolution_y": render_record["resolution_y"],
+                    },
                     preview_files=preview_files,
                 ),
                 source_manifest=str(source_manifest),
@@ -331,6 +433,7 @@ def _has_apply_operations(request: StylingRequest) -> bool:
         or request.preset_path
         or request.reset
         or request.fill_mode == "outline"
+        or request.outline
     )
 
 

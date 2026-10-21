@@ -52,13 +52,38 @@ A simple 2D stick-figure with:
 - Controls to bend elbows and knees
 - A root control to move the whole character
 
+## Styling the puppet
+
+`style_puppet.py` applies materials, accessories, backgrounds, toon outlines,
+and renders previews — all non-destructively:
+
+```bash
+blender --background --factory-startup --python style_puppet.py -- \
+  --input build/puppet.blend --output build/puppet-styled.blend \
+  --material torso=blue --accessory sneakers --background playground \
+  --outline --outline-thickness 0.03 --outline-color "#101010" \
+  --preview material=blue --preview-resolution 1280x720
+```
+
+- **Outlines** (`--outline`) use an inverted-hull Solidify modifier on body
+  parts and accessories. Customize with `--outline-thickness` (Blender units,
+  default `limb_thickness × 0.15`) and `--outline-color` (catalog name or
+  `#rrggbb`). Mutually exclusive with `--fill-mode outline` (wireframe wins).
+- **Rendering**: previews use EEVEE with a fixed sun + ambient light rig,
+  falling back to Workbench with a warning when EEVEE is unavailable.
+  `--render-resolution WxH` (default `1920x1080`) is stored on the saved blend.
+- **Presets**: `styling-preset-v2` adds an `outline` object
+  (`{enabled, thickness, color}`); v1 presets still load. Styling manifests are
+  `styling-v2` (adds `outline` + `render`); v1 manifests remain readable.
+
 ## Future goals
 
-- Colored materials and visual styles
 - Eyes, eyebrows, mouth, and facial expressions
 - Walk cycles, idle animations, and gestures
 - A library of reusable character presets
 
 ## Status
 
-This repository is under initial development. The first milestone is a working generator that produces a rigged 2D puppet in Blender.
+Active development. Feature 001 (generation + rigging) and feature 002
+(materials, accessories, backgrounds, previews) are merged; feature 003 adds
+EEVEE rendering, toon outlines, richer props, and resolution controls.
