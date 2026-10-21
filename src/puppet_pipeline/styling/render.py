@@ -4,6 +4,7 @@ import re
 from dataclasses import dataclass, field
 
 DEFAULT_ENGINE = "BLENDER_EEVEE_NEXT"
+ENGINE_CANDIDATES = ("BLENDER_EEVEE_NEXT", "BLENDER_EEVEE")
 FALLBACK_ENGINE = "BLENDER_WORKBENCH"
 DEFAULT_PREVIEW_RESOLUTION = (640, 480)
 DEFAULT_RENDER_RESOLUTION = (1920, 1080)
@@ -40,13 +41,15 @@ class RenderProfile:
 
     @staticmethod
     def apply_engine(scene) -> str | None:
-        """Prefer EEVEE; fall back to Workbench and return a warning string."""
-        try:
-            scene.render.engine = DEFAULT_ENGINE
-            return None
-        except TypeError:
-            scene.render.engine = FALLBACK_ENGINE
-            return "EEVEE unavailable; fell back to Workbench"
+        """Prefer EEVEE (any identifier); fall back to Workbench with a warning."""
+        for candidate in ENGINE_CANDIDATES:
+            try:
+                scene.render.engine = candidate
+                return None
+            except TypeError:
+                continue
+        scene.render.engine = FALLBACK_ENGINE
+        return "EEVEE unavailable; fell back to Workbench"
 
     @staticmethod
     def setup_light_rig(scene) -> dict:

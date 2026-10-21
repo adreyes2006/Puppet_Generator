@@ -17,19 +17,19 @@
 
 ## Inverted-hull outline
 
-- Technique: duplicate-effect via a `SOLIDIFY` modifier on each `pup.*`/`acc.*`
-  object:
-  - `thickness` < 0 (negative offset extrudes *outward* along normals when
-    combined with flipped normals) — use `modifier.offset = -1.0` with positive
-    `thickness` for a uniform outward hull.
-  - `use_flip_normals = True` so the hull faces inward → only the rim behind
-    the surface renders → reads as a stroke.
-  - `material_offset` pointing at an appended dark material slot so the hull
-    shades differently from the fill.
+- Technique: a `SOLIDIFY` modifier on each `pup.*`/`acc.*` object:
+  - `offset = +1.0` (shell grows outward; `-1` buries it inside the mesh).
+  - `use_flip_normals = True` so the hull's outer faces point inward and are
+    culled; only the far-side rim shows → reads as a stroke.
+  - The outline material sets `use_backface_culling = True` — required, or the
+    flipped hull is invisible in both EEVEE and Workbench.
+  - `material_offset` points the shell faces at an appended `mat.outline` slot.
   - `use_even_offset = True` for consistent thickness on capsules.
-- The outline material is a flat near-black material (`mat.outline`) with high
-  emission strength so it stays dark under EEVEE lighting — identical look in
-  Workbench fallback since emission bypasses shading.
+- The outline material is flat near-black via Base Color + `diffuse_color`
+  only. Do NOT set emission: `Emission Strength > 0` rendered the hull
+  invisible in Blender 5.2 EEVEE (empirically verified).
+- Engine identifiers vary by version: 4.2 uses `BLENDER_EEVEE_NEXT`, 5.2 uses
+  `BLENDER_EEVEE`. `apply_engine` tries both before Workbench fallback.
 - Idempotence: modifier named `outline_toon`; `apply` is a no-op when the
   modifier already exists (same pattern as `set_fill_mode`'s WIREFRAME check).
 - Removal: `--reset` / `reset_styling()` removes `outline_toon` modifiers and

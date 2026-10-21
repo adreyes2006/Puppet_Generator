@@ -82,7 +82,7 @@ class PresetRoundTripTests(unittest.TestCase):
         import json
 
         payload = json.loads(preset_path.read_text(encoding="utf-8"))
-        self.assertEqual(payload["schema"], "styling-preset-v1")
+        self.assertEqual(payload["schema"], "styling-preset-v2")
 
         reset_styling()
         self.assertEqual([o for o in bpy.data.objects if o.name.startswith("acc.")], [])

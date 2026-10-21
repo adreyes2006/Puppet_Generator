@@ -209,7 +209,7 @@ class PreviewRenderer:
     def _render_to(target: Path, resolution: tuple[int, int] | None = None) -> None:
         import bpy
 
-        from puppet_pipeline.styling.render import RenderProfile
+        from puppet_pipeline.styling.render import FALLBACK_ENGINE, RenderProfile
 
         scene = bpy.context.scene
         warning = RenderProfile.apply_engine(scene)
@@ -219,7 +219,7 @@ class PreviewRenderer:
 
         rig = (
             RenderProfile.setup_light_rig(scene)
-            if scene.render.engine == "BLENDER_EEVEE_NEXT"
+            if scene.render.engine != FALLBACK_ENGINE
             else None
         )
         camera = PreviewRenderer._frame_camera()

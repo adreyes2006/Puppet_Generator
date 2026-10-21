@@ -22,7 +22,7 @@ class EngineSelectionTests(unittest.TestCase):
         PreviewRenderer.render("material", "blue", self.preview_dir)
         self.assertIn(
             PreviewRenderer.last_engine,
-            ("BLENDER_EEVEE_NEXT", "BLENDER_WORKBENCH"),
+            ("BLENDER_EEVEE_NEXT", "BLENDER_EEVEE", "BLENDER_WORKBENCH"),
         )
 
     def test_light_rig_present_during_render(self) -> None:

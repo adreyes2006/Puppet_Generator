@@ -36,7 +36,7 @@ class OutlineApplyTests(unittest.TestCase):
             self.assertEqual(modifier.type, "SOLIDIFY")
             self.assertTrue(modifier.use_flip_normals)
             self.assertTrue(modifier.use_even_offset)
-            self.assertLess(modifier.offset, 0)
+            self.assertGreater(modifier.offset, 0)
             self.assertAlmostEqual(modifier.thickness, 0.10 * 0.15)
             slot = obj.data.materials[modifier.material_offset]
             self.assertTrue(slot.name.startswith(OUTLINE_MATERIAL_NAME))
@@ -91,6 +91,7 @@ class OutlineApplyTests(unittest.TestCase):
         modifier = obj.modifiers.get(OUTLINE_MODIFIER_NAME)
         self.assertAlmostEqual(modifier.thickness, 0.05)
         material = bpy.data.materials[OUTLINE_MATERIAL_NAME]
+        self.assertTrue(material.use_backface_culling)
         principled = next(
             n for n in material.node_tree.nodes if n.type == "BSDF_PRINCIPLED"
         )

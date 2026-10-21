@@ -60,7 +60,7 @@ class StylingSmokeTests(unittest.TestCase):
         self.assertLess(time.perf_counter() - start, 60.0)
         self.assertTrue(output.exists())
         payload = json.loads(manifest.read_text(encoding="utf-8"))
-        self.assertEqual(payload["schema"], "styling-v1")
+        self.assertEqual(payload["schema"], "styling-v2")
         self.assertEqual(payload["background"], "kitchen")
         self.assertEqual(len(payload["accessories"]), 2)
 

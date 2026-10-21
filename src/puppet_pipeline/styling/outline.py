@@ -115,15 +115,8 @@ class OutlineApplier:
         )
         principled.inputs["Base Color"].default_value = rgba
         principled.inputs["Roughness"].default_value = 1.0
-        emission = principled.inputs.get("Emission Color") or principled.inputs.get(
-            "Emission"
-        )
-        if emission is not None:
-            emission.default_value = rgba
-        strength = principled.inputs.get("Emission Strength")
-        if strength is not None:
-            strength.default_value = 1.0
         material.diffuse_color = rgba
+        material.use_backface_culling = True
         return material
 
     @staticmethod
@@ -139,7 +132,7 @@ class OutlineApplier:
         slot_index = len(obj.data.materials) - 1
         modifier = obj.modifiers.new(name=OUTLINE_MODIFIER_NAME, type="SOLIDIFY")
         modifier.thickness = resolved["thickness"]
-        modifier.offset = -1.0
+        modifier.offset = 1.0
         modifier.use_flip_normals = True
         modifier.use_even_offset = True
         modifier.material_offset = slot_index

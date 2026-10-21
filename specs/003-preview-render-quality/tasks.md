@@ -93,12 +93,12 @@
 
 **Purpose**: v1 compat proof, pixel-sampling, full suite, quickstart
 
-- [ ] T024 [P] Unit test `tests/unit/test_presets_v2.py`: v1 preset loads with `outline=None`; v2 round-trips outline; unknown outline keys rejected; invalid color/thickness → `PresetError`
-- [ ] T025 [P] Unit test `tests/unit/test_manifest_v2.py`: v2 emit includes `outline`/`render`; v1 manifest readable via `read()`; determinism (byte-identical re-serialize)
-- [ ] T026 Blender test: pixel-sampling check — render outline preview, read PNG via `bpy.data.images.load`, assert dark pixels adjacent to fill pixels (SC-002); assert outline-on vs outline-off PNGs differ (SC-004)
-- [ ] T027 Update `README.md`: document new CLI flags, v2 schemas, EEVEE behavior, outline customization examples
-- [ ] T028 Run full suite: `pytest tests/unit` + `tests/blender/run_in_blender.py` — all green
-- [ ] T029 Execute all 5 quickstart scenarios; record results in quickstart verification
+- [x] T024 [P] Unit test `tests/unit/test_presets_v2.py`: v1 preset loads with `outline=None`; v2 round-trips outline; unknown outline keys rejected; invalid color/thickness → `PresetError`
+- [x] T025 [P] Unit test `tests/unit/test_manifest_v2.py`: v2 emit includes `outline`/`render`; v1 manifest readable via `read()`; determinism (byte-identical re-serialize)
+- [x] T026 Blender test: pixel-sampling check — render outline preview, read PNG via `bpy.data.images.load`, assert dark pixels adjacent to fill pixels (SC-002); assert outline-on vs outline-off PNGs differ (SC-004)
+- [x] T027 Update `README.md`: document new CLI flags, v2 schemas, EEVEE behavior, outline customization examples
+- [x] T028 Run full suite: `pytest tests/unit` + `tests/blender/run_in_blender.py` — all green
+- [x] T029 Execute all 5 quickstart scenarios; record results in quickstart verification
 
 ---
 
